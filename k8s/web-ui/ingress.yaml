@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ui
+  labels:
+    app.kubernetes.io/name: web-ui
+  annotations:
+    # Works with Traefik (k3s/k3d default) and nginx-ingress.
+    ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: yellowpad.localtest.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web-ui
+                port:
+                  number: 80
