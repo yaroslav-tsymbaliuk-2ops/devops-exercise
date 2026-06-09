@@ -2,7 +2,31 @@
 
 This guide is written for a client IT team deploying YellowPad onto their own Kubernetes cluster. It assumes Kubernetes familiarity but no prior exposure to YellowPad.
 
-The reference target is **single-node k3s on Linux**, which is the lightest production-credible footprint for an on-prem install. A k3d-based developer workflow is documented in the appendix.
+The reference target is **single-node k3s on Linux**, which is the lightest production-credible footprint for an on-prem install.
+
+- **Just want to see it run?** Use the **k3d quick-start** below — one command, ~2 minutes.
+- **Doing the real on-prem install?** Skip to [Section 2 — Production install on k3s](#2-production-install-on-k3s-linux).
+
+---
+
+## 0. Quick-Start — local evaluation with k3d
+
+[k3d](https://k3d.io) runs real k3s inside Docker, so the manifests are identical to a production k3s install. This is the fastest way to validate the stack on a laptop.
+
+```bash
+brew install k3d kubectl make        # macOS (Docker Desktop must be running)
+git clone https://github.com/yellowpadaifunc/devops-exercise.git
+cd devops-exercise
+make all                             # cluster -> build -> load -> deploy -> wait -> verify (~2 min)
+```
+
+When it finishes, all four verification checks have already passed. Open:
+
+👉 **http://yellowpad.localtest.me:8080/** (`localtest.me` resolves to `127.0.0.1`, no `/etc/hosts` edit needed)
+
+Tear down with `make destroy`. Individual `make` targets are listed in [Appendix A](#appendix-a--make-targets).
+
+---
 
 ---
 
@@ -33,7 +57,7 @@ The reference target is **single-node k3s on Linux**, which is the lightest prod
 
 ---
 
-## 2. Quick-Start (zero → running)
+## 2. Production install on k3s (Linux)
 
 ```bash
 # --- on the target host ---------------------------------------------------
@@ -206,28 +230,24 @@ The Service port (`8000`) is unchanged; only the host-side port differs.
 
 ---
 
-## Appendix A — Developer workflow with k3d (macOS / Linux dev)
+## Appendix A — `make` targets
 
-For local development we use **k3d**, which runs real k3s inside Docker. The manifests are identical to the on-prem deploy above.
+`make all` (used in the [k3d quick-start](#0-quick-start--local-evaluation-with-k3d)) is the chain of these individual targets. Run any of them on their own:
 
-```bash
-brew install k3d kubectl kustomize    # macOS
-make cluster                           # creates k3d cluster with :8080→:80 mapping
-make build                             # docker build all three services
-make load                              # k3d image import into the cluster
-make deploy                            # kubectl apply -k k8s
-make wait                              # block on rollouts
-make verify                            # /healthz + upload + process + ingress checks
-```
+| Target | Action |
+|--------|--------|
+| `make all` | cluster → build → load → deploy → wait → verify |
+| `make cluster` | create the k3d cluster (`:8080→:80` mapping) |
+| `make build` | docker build all three service images |
+| `make load` | `k3d image import` the images into the cluster |
+| `make deploy` | `kubectl apply -k k8s` |
+| `make wait` | block until all rollouts are ready |
+| `make verify` | `/healthz` + upload + process + ingress checks |
+| `make logs` | tail api-gateway logs |
+| `make clean` | delete the `yellowpad` namespace (keep cluster) |
+| `make destroy` | delete the k3d cluster |
 
-Then browse to `http://yellowpad.localtest.me:8080/` (the `localtest.me` domain always resolves to `127.0.0.1`, so no `/etc/hosts` edit is needed).
-
-To tear down:
-
-```bash
-make clean      # delete the yellowpad namespace
-make destroy    # delete the k3d cluster
-```
+The manifests are identical between k3d and production k3s — only the image-loading step differs (`k3d image import` locally vs. a registry pull in production).
 
 ---
 

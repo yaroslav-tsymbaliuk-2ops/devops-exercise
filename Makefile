@@ -1,11 +1,14 @@
 # YellowPad — local dev & deploy helpers (k3d + Kustomize)
 #
 # Usage:
+#   make all       # one-shot: cluster -> build -> load -> deploy -> wait -> verify
 #   make cluster   # create the k3d cluster
 #   make build     # build all three images
 #   make load      # import images into k3d
 #   make deploy    # apply manifests
+#   make wait      # block until all rollouts are ready
 #   make verify    # run health + upload + process checks
+#   make logs      # tail api-gateway logs
 #   make clean     # tear down namespace
 #   make destroy   # delete the k3d cluster
 
